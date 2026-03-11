@@ -14,8 +14,9 @@ const activityData = [
 
 export default function StudentProfile() {
   const { id } = useParams();
-  const { computeStudentSRL, users } = useMockBackend();
+  const { computeStudentSRL, users, assignIntervention } = useMockBackend();
   const [uploaded, setUploaded] = useState(false);
+  const [materialType, setMaterialType] = useState('notes');
   const [srlData, setSrlData] = useState([]);
   const [srlScores, setSrlScores] = useState({ planning: 0, monitoring: 0, control: 0, reflection: 0, motivation: 0 });
   const [student, setStudent] = useState(null);
@@ -40,6 +41,10 @@ export default function StudentProfile() {
 
   const handleUpload = (e) => {
     e.preventDefault();
+    if (!student) return;
+
+    assignIntervention(student.id, materialType, `Teacher assigned ${materialType} for ${getBehaviorType()}`);
+    
     setUploaded(true);
     setTimeout(() => setUploaded(false), 3000);
   };
@@ -162,7 +167,12 @@ export default function StudentProfile() {
          <form onSubmit={handleUpload}>
             <div className="form-group mb-4">
               <label className="form-label" style={{ color: 'white' }}>Intervention Material Type</label>
-              <select className="form-control" style={{ maxWidth: '400px', appearance: 'none', background: 'transparent', color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}>
+              <select 
+                className="form-control" 
+                style={{ maxWidth: '400px', appearance: 'none', background: 'transparent', color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}
+                value={materialType}
+                onChange={(e) => setMaterialType(e.target.value)}
+              >
                 <option value="notes" className="text-black">Concept Explanation Notes (Recommended)</option>
                 <option value="video" className="text-black">Simplified Video Lesson</option>
                 <option value="quiz" className="text-black">Extra Practice Quizzes</option>

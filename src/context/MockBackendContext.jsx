@@ -15,6 +15,9 @@ export const MockBackendProvider = ({ children }) => {
     { code: 'AI-ML-B-2026', name: 'AI & ML Section B', teacherId: 1, students: [2] }
   ]);
 
+  // Phase 9: Persistent Interventions
+  const [interventions, setInterventions] = useState([]);
+
   // Phase 1 & 2: Telemetry Event Store
   const [events, setEvents] = useState([]);
   
@@ -144,6 +147,24 @@ export const MockBackendProvider = ({ children }) => {
     }));
   };
 
+  // Phase 9: Assign Intervention
+  const assignIntervention = (studentId, materialType, description) => {
+    const newIntervention = {
+      id: Date.now(),
+      student_id: studentId,
+      material_type: materialType,
+      description,
+      timestamp: new Date().toISOString(),
+      status: 'active'
+    };
+    setInterventions(prev => [...prev, newIntervention]);
+    logEvent({
+      student_id: 'teacher', 
+      event_type: 'assign_intervention', 
+      event_metadata: { target_student: studentId, material_type: materialType }
+    });
+  };
+
   // Authentication
   const login = async (email, password) => {
     return new Promise((resolve) => {
@@ -211,7 +232,8 @@ export const MockBackendProvider = ({ children }) => {
   return (
     <MockBackendContext.Provider value={{
       currentUser, users, login, logout, registerTeacher, createCluster, registerStudent,
-      logEvent, getRecentEvents, computeStudentSRL, getBehaviorClusters, events, subjects, processedMetrics
+      logEvent, getRecentEvents, computeStudentSRL, getBehaviorClusters, assignIntervention,
+      interventions, events, subjects, processedMetrics
     }}>
       {children}
     </MockBackendContext.Provider>

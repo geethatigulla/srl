@@ -1,5 +1,5 @@
-import { ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, AreaChart, Area, XAxis, CartesianGrid, Tooltip } from 'recharts';
-import { Target, Clock, CheckCircle, BarChart2, Star } from 'lucide-react';
+import { Target, Clock, CheckCircle, BarChart2, Star, ShieldAlert, ExternalLink, FileText, PlayCircle, HelpCircle } from 'lucide-react';
+import { useMockBackend } from '../../context/MockBackendContext';
 
 const radarData = [
   { subject: 'Neural Nets', A: 85, fullMark: 100 },
@@ -21,6 +21,17 @@ const activityData = [
 ];
 
 export default function StudentDashboard() {
+  const { currentUser, interventions } = useMockBackend();
+  const studentInterventions = interventions.filter(i => i.student_id === currentUser?.id);
+
+  const getMaterialIcon = (type) => {
+    switch (type) {
+      case 'notes': return <FileText size={20} className="text-accent" />;
+      case 'video': return <PlayCircle size={20} className="text-success" />;
+      case 'quiz': return <HelpCircle size={20} className="text-warning" />;
+      default: return <ExternalLink size={20} />;
+    }
+  };
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
