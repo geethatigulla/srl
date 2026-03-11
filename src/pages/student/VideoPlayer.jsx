@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Play, Pause, Maximize, Volume2, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useTelemetry } from '../../context/TelemetryContext';
+import { useMockBackend } from '../../context/MockBackendContext';
 
 export default function VideoPlayer() {
   const { id } = useParams();
@@ -15,8 +16,16 @@ export default function VideoPlayer() {
   const [duration, setDuration] = useState(0);
   
   const { track } = useTelemetry();
+  const { subjects } = useMockBackend();
   const videoRef = useRef(null);
   const containerRef = useRef(null);
+
+  // Find course and chapter metadata
+  const chapterId = parseInt(id);
+  const course = subjects.find(s => s.chapters.find(ch => ch.id === chapterId));
+  const courseId = course?.id || 'unknown';
+
+  const metadataBase = { course_id: courseId, chapter_id: chapterId };
 
   useEffect(() => {
     const video = videoRef.current;
@@ -40,14 +49,14 @@ export default function VideoPlayer() {
     if (currentProgress >= 45 && !quizAnswered && !showQuiz) {
        setIsPlaying(false);
        setShowQuiz(true);
-       track('quiz_start', { video_timestamp: '45%' });
+       track('quiz_start', { ...metadataBase, video_timestamp: '45%' });
        return;
     }
     // Interrupt for poll at 75%
     if (currentProgress >= 75 && !pollAnswered && quizAnswered && !showQuiz) {
        setIsPlaying(false);
        setShowQuiz(true);
-       track('poll_start', { video_timestamp: '75%' });
+       track('poll_start', { ...metadataBase, video_timestamp: '75%' });
        return;
     }
     
@@ -64,7 +73,7 @@ export default function VideoPlayer() {
   const handleEnded = () => {
     setIsPlaying(false);
     setProgress(100);
-    track('video_complete');
+    track('video_complete', { ...metadataBase });
   };
 
   const togglePlay = () => {
@@ -76,9 +85,9 @@ export default function VideoPlayer() {
     
     setIsPlaying(!isPlaying);
     if (!isPlaying) {
-      track('video_play', { video_timestamp: `${progress.toFixed(1)}%` });
+      track('video_play', { ...metadataBase, video_timestamp: `${progress.toFixed(1)}%` });
     } else {
-      track('video_pause', { video_timestamp: `${progress.toFixed(1)}%` });
+      track('video_pause', { ...metadataBase, video_timestamp: `${progress.toFixed(1)}%` });
     }
   };
 
@@ -90,12 +99,12 @@ export default function VideoPlayer() {
     
     // Non-skippable logic: Can only seek backwards or up to maxWatched
     if (percentage <= maxWatched) {
-       track('video_rewind', { from_timestamp: `${progress.toFixed(1)}%`, to_timestamp: `${percentage.toFixed(1)}%` });
+       track('video_rewind', { ...metadataBase, from_timestamp: `${progress.toFixed(1)}%`, to_timestamp: `${percentage.toFixed(1)}%` });
        videoRef.current.currentTime = (percentage / 100) * duration;
        setProgress(percentage);
     } else {
        // Non-skippable warning tracked
-       track('video_skip_attempt', { attempted_timestamp: `${percentage.toFixed(1)}%` });
+       track('video_skip_attempt', { ...metadataBase, attempted_timestamp: `${percentage.toFixed(1)}%` });
        videoRef.current.currentTime = (maxWatched / 100) * duration;
        setProgress(maxWatched);
     }
@@ -105,14 +114,15 @@ export default function VideoPlayer() {
     if (isPoll) {
        setPollAnswered(true);
        setShowQuiz(false);
-       track('poll_answer', { feedback: correct ? 'yes' : 'no' });
+       track('poll_answer', { ...metadataBase, feedback: correct ? 'yes' : 'no' });
        setIsPlaying(true);
        return;
     }
 
     setQuizAnswered(true);
     setShowQuiz(false);
-    track('quiz_answer', { correct, video_timestamp: `${progress.toFixed(1)}%` });
+    track('quiz_answer', { ...metadataBase, correct, video_timestamp: `${progress.toFixed(1)}%` });
+    track('quiz_submit', { ...metadataBase, correct, video_timestamp: `${progress.toFixed(1)}%` });
     
     if (!correct) {
       alert("Incorrect, but since this is a demo, we will let you proceed.");

@@ -17,12 +17,71 @@ export const MockBackendProvider = ({ children }) => {
 
   // Phase 1 & 2: Telemetry Event Store
   const [events, setEvents] = useState([]);
+  
+  // Phase 4: Simulated "Analytics Processor" state for real-time dashboard
+  const [processedMetrics, setProcessedMetrics] = useState({
+    activeStudents: 0,
+    watchingCount: 0,
+    quizzingCount: 0,
+    idleCount: 0,
+    systemLoad: 0
+  });
+
+  const [subjects] = useState([
+    {
+      id: 1,
+      name: 'Machine Learning Basics',
+      progress: 100,
+      chapters: [
+        { id: 101, title: 'Introduction to ML', duration: '15m', completed: true, type: 'video' },
+        { id: 102, title: 'Supervised vs Unsupervised', duration: '20m', completed: true, type: 'video' },
+        { id: 103, title: 'Basics Quiz', duration: '10 Qs', completed: true, type: 'quiz' },
+      ]
+    },
+    {
+      id: 2,
+      name: 'Neural Networks Architecture',
+      progress: 45,
+      chapters: [
+        { id: 201, title: 'Perceptrons', duration: '25m', completed: true, type: 'video' },
+        { id: 202, title: 'Activation Functions', duration: '18m', completed: false, type: 'video', current: true },
+        { id: 203, title: 'Backpropagation Intuition', duration: '30m', completed: false, type: 'video', locked: true },
+        { id: 204, title: 'Architecture Quiz', duration: '15 Qs', completed: false, type: 'quiz', locked: true },
+      ]
+    },
+    {
+      id: 3,
+      name: 'Deep Learning Practical',
+      progress: 0,
+      locked: true,
+      chapters: [
+        { id: 301, title: 'Intro to PyTorch', duration: '40m', completed: false, type: 'video', locked: true },
+        { id: 302, title: 'Your First Model', duration: 'Assignment', completed: false, type: 'assignment', locked: true },
+      ]
+    }
+  ]);
 
   const [currentUser, setCurrentUser] = useState(null);
 
   // Telemetry Ingestion API (Simulated)
   const logEvent = (eventData) => {
     setEvents(prev => [...prev, eventData]);
+    
+    // Phase 4: Simulated Stream Processor
+    // This logic runs "on the edge" as events arrive
+    setProcessedMetrics(prev => {
+      const newMetrics = { ...prev };
+      
+      // Update counts based on incoming event types
+      if (eventData.event_type.startsWith('video_')) newMetrics.watchingCount++;
+      if (eventData.event_type.startsWith('quiz_')) newMetrics.quizzingCount++;
+      if (eventData.event_type === 'idle_state') newMetrics.idleCount++;
+      
+      // Simulate pipeline load
+      newMetrics.systemLoad = Math.min(100, (events.length % 100) + 1);
+      
+      return newMetrics;
+    });
   };
 
   // Helper to fetch live events for real-time dashboard (Phase 11)
@@ -111,7 +170,7 @@ export const MockBackendProvider = ({ children }) => {
   return (
     <MockBackendContext.Provider value={{
       currentUser, users, login, logout, registerTeacher, createCluster, registerStudent,
-      logEvent, getRecentEvents, computeStudentSRL, events
+      logEvent, getRecentEvents, computeStudentSRL, events, subjects, processedMetrics
     }}>
       {children}
     </MockBackendContext.Provider>

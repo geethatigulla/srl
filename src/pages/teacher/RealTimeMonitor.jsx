@@ -70,34 +70,42 @@ export default function RealTimeMonitor() {
         </div>
       </div>
 
-      <div className="dashboard-metrics mb-8">
-        <div className="card metric-card">
-          <div className="flex justify-between">
-             <span className="metric-title">Students Online</span>
-             <Users size={20} className="text-success" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="card metric-card border-l-4 border-accent">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted">Step 1: Ingestion</span>
+            <Activity size={14} className="text-accent" />
           </div>
-          <div className="metric-value">{metrics.online} <span className="text-muted text-sm">/ {totalStudents}</span></div>
+          <div className="metric-title">Event Throughput</div>
+          <div className="metric-value">{processedMetrics.systemLoad}%</div>
+          <div className="text-xs text-muted mt-1">Simulated Kafka Stream</div>
         </div>
-        <div className="card metric-card">
-          <div className="flex justify-between">
-             <span className="metric-title">Watching Videos</span>
-             <PlayCircle size={20} className="text-primary" />
+
+        <div className="card metric-card border-l-4 border-primary">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted">Step 2: Processing</span>
+            <Activity size={14} className="text-primary" />
           </div>
-          <div className="metric-value">{metrics.watching}</div>
+          <div className="metric-title">Real-time watching</div>
+          <div className="metric-value">{processedMetrics.watchingCount}</div>
         </div>
-        <div className="card metric-card">
-          <div className="flex justify-between">
-             <span className="metric-title">Attempting Quizzes</span>
-             <Edit3 size={20} className="text-warning" />
+
+        <div className="card metric-card border-l-4 border-warning">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted">Step 3: Analytics</span>
+            <Activity size={14} className="text-warning" />
           </div>
-          <div className="metric-value">{metrics.quizzing}</div>
+          <div className="metric-title">Active Assessments</div>
+          <div className="metric-value">{processedMetrics.quizzingCount}</div>
         </div>
-        <div className="card metric-card">
-          <div className="flex justify-between">
-             <span className="metric-title">Inactive / Idle</span>
-             <Clock size={20} className="text-danger" />
+
+        <div className="card metric-card border-l-4 border-success">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted">Step 4: Delivery</span>
+            <Users size={14} className="text-success" />
           </div>
-          <div className="metric-value">{metrics.idle}</div>
+          <div className="metric-title">Online Students</div>
+          <div className="metric-value">{processedMetrics.activeStudents || users.filter(u=>u.role==='student').length}</div>
         </div>
       </div>
 

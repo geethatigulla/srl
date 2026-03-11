@@ -2,48 +2,29 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PlayCircle, CheckCircle2, ChevronDown, ChevronUp, Lock, FileText, CheckSquare, MessageSquare } from 'lucide-react';
 
-const subjects = [
-  {
-    id: 1,
-    name: 'Machine Learning Basics',
-    progress: 100,
-    chapters: [
-      { id: 101, title: 'Introduction to ML', duration: '15m', completed: true, type: 'video' },
-      { id: 102, title: 'Supervised vs Unsupervised', duration: '20m', completed: true, type: 'video' },
-      { id: 103, title: 'Basics Quiz', duration: '10 Qs', completed: true, type: 'quiz' },
-    ]
-  },
-  {
-    id: 2,
-    name: 'Neural Networks Architecture',
-    progress: 45,
-    chapters: [
-      { id: 201, title: 'Perceptrons', duration: '25m', completed: true, type: 'video' },
-      { id: 202, title: 'Activation Functions', duration: '18m', completed: false, type: 'video', current: true },
-      { id: 203, title: 'Backpropagation Intuition', duration: '30m', completed: false, type: 'video', locked: true },
-      { id: 204, title: 'Architecture Quiz', duration: '15 Qs', completed: false, type: 'quiz', locked: true },
-    ]
-  },
-  {
-    id: 3,
-    name: 'Deep Learning Practical',
-    progress: 0,
-    locked: true,
-    chapters: [
-      { id: 301, title: 'Intro to PyTorch', duration: '40m', completed: false, type: 'video', locked: true },
-      { id: 302, title: 'Your First Model', duration: 'Assignment', completed: false, type: 'assignment', locked: true },
-    ]
-  }
-];
+import { useMockBackend } from '../../context/MockBackendContext';
 
 export default function LearningProgress() {
+  const { subjects } = useMockBackend();
   const [expanded, setExpanded] = useState(2); // ID of expanded subject
   const navigate = useNavigate();
 
-  const handleInteract = (item) => {
+  const { track } = useTelemetry();
+
+  const handleInteract = (item, subjectId) => {
     if (item.locked) return;
+    
+    const metadata = { course_id: subjectId, chapter_id: item.id };
+
     if (item.type === 'video') {
       navigate(`/student/video/${item.id}`);
+    } else if (item.type === 'assignment') {
+      track('assignment_view', metadata);
+      const submit = confirm(`Viewing ${item.title}. Submit assignment now?`);
+      if (submit) {
+        track('assignment_submit', metadata);
+        alert("Assignment submitted!");
+      }
     } else {
       alert(`Opening ${item.type}: ${item.title}`);
     }
@@ -75,7 +56,15 @@ export default function LearningProgress() {
               
               <div 
                 className="p-4 flex flex-col cursor-pointer hover:bg-background-hover transition-colors"
-                onClick={() => !subject.locked && setExpanded(expanded === subject.id ? null : subject.id)}
+                onClick={() => {
+                  if (!subject.locked) {
+                    const isExpanding = expanded !== subject.id;
+                    setExpanded(isExpanding ? subject.id : null);
+                    if (isExpanding) {
+                      track('chapter_preview', { course_id: subject.id });
+                    }
+                  }
+                }}
               >
                  <div className="flex justify-between items-center mb-2">
                     <h3 className="flex items-center gap-2 m-0">
@@ -102,7 +91,7 @@ export default function LearningProgress() {
                         key={ch.id} 
                         className="flex justify-between items-center p-4 border-b border-border last:border-0 hover:bg-white transition-colors cursor-pointer"
                         style={{ background: ch.current ? 'rgba(74, 144, 226, 0.05)' : '' }}
-                        onClick={() => handleInteract(ch)}
+                        onClick={() => handleInteract(ch, subject.id)}
                      >
                         <div className="flex items-center gap-3">
                            <div className={`p-2 rounded-full ${ch.current ? 'bg-accent/10 border border-accent border-opacity-20' : ''}`}>

@@ -15,8 +15,10 @@ export const TelemetryProvider = ({ children }) => {
     const event = {
       timestamp: new Date().toISOString(),
       student_id: currentUser.id,
+      course_id: metadata.course_id || 'unknown',
+      chapter_id: metadata.chapter_id || 'unknown',
       event_type: eventType,
-      ...metadata
+      event_metadata: metadata
     };
 
     // Send to Mock Backend (Simulating API ingestion)
@@ -29,6 +31,7 @@ export const TelemetryProvider = ({ children }) => {
 
     const handleFocus = () => track('tab_focus');
     const handleBlur = () => track('tab_blur');
+    const handleClick = (e) => track('mouse_click', { x: e.clientX, y: e.clientY, target: e.target.tagName });
     
     // Throttled scroll/mouse tracking to prevent massive event floods in the prototype
     let scrollTimeout;
@@ -50,6 +53,7 @@ export const TelemetryProvider = ({ children }) => {
     window.addEventListener('focus', handleFocus);
     window.addEventListener('blur', handleBlur);
     window.addEventListener('scroll', handleScroll);
+    window.addEventListener('click', handleClick);
     window.addEventListener('mousemove', resetIdle);
     window.addEventListener('keydown', resetIdle);
 
@@ -57,6 +61,7 @@ export const TelemetryProvider = ({ children }) => {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('blur', handleBlur);
       window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('click', handleClick);
       window.removeEventListener('mousemove', resetIdle);
       window.removeEventListener('keydown', resetIdle);
       clearTimeout(scrollTimeout);
