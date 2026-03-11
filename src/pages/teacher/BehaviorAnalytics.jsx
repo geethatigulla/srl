@@ -12,12 +12,6 @@ const behaviorData = [
   { name: 'At Risk', value: 5, color: 'var(--danger)' }
 ];
 
-const riskAlerts = [
-  { id: 1, name: 'Alex Johnson', level: 'High', reason: 'Missed 3 consecutive video lectures', intervention: 'Schedule 1-on-1 meeting' },
-  { id: 2, name: 'Sam Taylor', level: 'Medium', reason: 'Quiz scores dropped by 20% this week', intervention: 'Assign review exercises' },
-  { id: 3, name: 'Jordan Lee', level: 'Medium', reason: 'High video pause rate, low completion', intervention: 'Provide simplified material' }
-];
-
 export default function BehaviorAnalytics() {
   const { users, computeStudentSRL } = useMockBackend();
   const [classSRL, setClassSRL] = useState({ planning: 0, monitoring: 0, control: 0, reflection: 0 });
@@ -106,12 +100,45 @@ export default function BehaviorAnalytics() {
                    {alert.reason}
                  </div>
                  <div className="text-sm font-medium" style={{ color: 'var(--secondary)' }}>
-                   Suggested: {alert.intervention}
+                    SRL Deficit: {alert.srlDeficit}
                  </div>
                </div>
              ))}
           </div>
         </div>
+      </div>
+
+      <div className="card mb-8">
+         <div className="flex justify-between items-center mb-6">
+            <h3 className="flex items-center gap-2 m-0">
+               <Target className="text-accent" /> Class-wide Strategic Learning Gaps
+            </h3>
+            <span className="text-xs text-muted">Aggregated from real-time telemetry</span>
+         </div>
+         
+         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[
+              { label: 'Planning', value: classSRL.planning, color: 'var(--primary)', icon: <Zap size={14} /> },
+              { label: 'Monitoring', value: classSRL.monitoring, color: 'var(--warning)', icon: <Activity size={14} /> },
+              { label: 'Control', value: classSRL.control, color: 'var(--accent)', icon: <Target size={14} /> },
+              { label: 'Reflection', value: classSRL.reflection, color: 'var(--success)', icon: <TrendingDown size={14} /> },
+            ].map(dim => (
+              <div key={dim.label} className="p-4 rounded-lg bg-background-hover border border-border">
+                 <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium flex items-center gap-2">
+                       {dim.icon} {dim.label}
+                    </span>
+                    <span className="text-lg font-bold" style={{ color: dim.color }}>{dim.value}%</span>
+                 </div>
+                 <div className="h-1.5 w-full bg-white/50 rounded-full overflow-hidden">
+                    <div className="h-full transition-all duration-1000" style={{ width: `${dim.value}%`, background: dim.color }} />
+                 </div>
+                 <p className="text-[10px] text-muted mt-2">
+                    {dim.value < 50 ? `Critical: Class struggling with ${dim.label.toLowerCase()}` : `Stable: Healthy ${dim.label.toLowerCase()} levels`}
+                 </p>
+              </div>
+            ))}
+         </div>
       </div>
 
     </div>
