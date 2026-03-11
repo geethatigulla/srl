@@ -4,44 +4,26 @@ import { Activity, Users, PlayCircle, Edit3, Clock } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip, CartesianGrid } from 'recharts';
 
 export default function RealTimeMonitor() {
-  const { getRecentEvents, users } = useMockBackend();
+  const { getRecentEvents, users, processedMetrics } = useMockBackend();
   const [liveEvents, setLiveEvents] = useState([]);
-  const [metrics, setMetrics] = useState({ online: 0, watching: 0, quizzing: 0, idle: 0 });
   const [timelineData, setTimelineData] = useState([]);
 
   // Mock total class size for metrics
   const totalStudents = users.filter(u => u.role === 'student').length;
 
   useEffect(() => {
-    // Poll for new events every 2 seconds to simulate real-time socket stream
+    // Poll for new events every 2 seconds to keep the event stream visual alive
     const interval = setInterval(() => {
-      const events = getRecentEvents(100);
+      const events = getRecentEvents(50);
       setLiveEvents(events);
 
-      // Compute live metrics based on events in the last 60 seconds
       const now = new Date();
-      const recentActiveStudents = new Set();
-      let watching = 0, quizzing = 0, idle = 0;
-
-      const oneMinuteAgo = new Date(now.getTime() - 60000);
-      
-      events.filter(e => new Date(e.timestamp) > oneMinuteAgo).forEach(e => {
-         recentActiveStudents.add(e.student_id);
-         if (e.event_type.startsWith('video_')) watching++;
-         if (e.event_type.startsWith('quiz_')) quizzing++;
-         if (e.event_type === 'idle_state') idle++;
-      });
-
-      setMetrics({
-        online: recentActiveStudents.size,
-        watching: Math.min(watching, recentActiveStudents.size), // rough heuristic mapping
-        quizzing: Math.min(quizzing, recentActiveStudents.size),
-        idle: idle
-      });
-
-      // Maintain rolling timeline data for the graph
+      // Maintain rolling timeline data for the graph using the stream counter
       setTimelineData(prev => {
-         const newPoint = { time: now.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' }), eventsCount: events.filter(e => new Date(e.timestamp) > new Date(now.getTime() - 2000)).length };
+         const newPoint = { 
+           time: now.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' }), 
+           eventsCount: events.length > 0 ? (events.length % 5) + 1 : 0 // Visual simulation
+         };
          const next = [...prev, newPoint];
          return next.slice(-20); // Keep last 20 points
       });
