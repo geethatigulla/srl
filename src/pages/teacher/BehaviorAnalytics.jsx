@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { AlertTriangle, TrendingDown } from 'lucide-react';
+import { AlertTriangle, TrendingDown, Target, Zap } from 'lucide-react';
+import { useMockBackend } from '../../context/MockBackendContext';
+import { useState, useEffect } from 'react';
 
 const behaviorData = [
   { name: 'Consistent Learners', value: 45, color: 'var(--success)' },
@@ -17,6 +19,35 @@ const riskAlerts = [
 ];
 
 export default function BehaviorAnalytics() {
+  const { users, computeStudentSRL } = useMockBackend();
+  const [classSRL, setClassSRL] = useState({ planning: 0, monitoring: 0, control: 0, reflection: 0 });
+
+  useEffect(() => {
+    const students = users.filter(u => u.role === 'student');
+    if (students.length === 0) return;
+
+    const totals = students.reduce((acc, s) => {
+      const scores = computeStudentSRL(s.id);
+      return {
+        planning: acc.planning + scores.planning,
+        monitoring: acc.monitoring + scores.monitoring,
+        control: acc.control + scores.control,
+        reflection: acc.reflection + scores.reflection
+      };
+    }, { planning: 0, monitoring: 0, control: 0, reflection: 0 });
+
+    setClassSRL({
+      planning: Math.round(totals.planning / students.length),
+      monitoring: Math.round(totals.monitoring / students.length),
+      control: Math.round(totals.control / students.length),
+      reflection: Math.round(totals.reflection / students.length)
+    });
+  }, [users, computeStudentSRL]);
+
+  const riskAlerts = [
+    { id: 1, name: 'Rahul Sharma', level: 'High', reason: 'High confusion spots in ML Introduction', srlDeficit: 'Control' },
+    { id: 2, name: 'Alex Johnson', level: 'Medium', reason: 'Skips reflection polls frequently', srlDeficit: 'Reflection' },
+  ];
   return (
     <div>
       <div className="mb-8">
