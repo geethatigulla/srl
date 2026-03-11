@@ -117,6 +117,33 @@ export const MockBackendProvider = ({ children }) => {
     return { planning, monitoring, control, reflection, motivation };
   };
 
+  // Phase 8: Dynamic Behavior Clustering (Simulated K-Means)
+  const getBehaviorClusters = () => {
+    const students = users.filter(u => u.role === 'student');
+    const clusters = {
+      'Strategic Learners': [],
+      'Passive Learners': [],
+      'At Risk': [],
+      'Inconsistent': []
+    };
+
+    students.forEach(s => {
+      const srl = computeStudentSRL(s.id);
+      const avg = (srl.planning + srl.monitoring + srl.control + srl.reflection) / 4;
+      
+      if (avg > 75 && srl.planning > 70) clusters['Strategic Learners'].push(s);
+      else if (srl.motivation < 40 || avg < 40) clusters['At Risk'].push(s);
+      else if (srl.reflection < 50) clusters['Passive Learners'].push(s);
+      else clusters['Inconsistent'].push(s);
+    });
+
+    return Object.entries(clusters).map(([name, members]) => ({
+      name,
+      value: members.length,
+      members: members.map(m => m.name)
+    }));
+  };
+
   // Authentication
   const login = async (email, password) => {
     return new Promise((resolve) => {
@@ -184,7 +211,7 @@ export const MockBackendProvider = ({ children }) => {
   return (
     <MockBackendContext.Provider value={{
       currentUser, users, login, logout, registerTeacher, createCluster, registerStudent,
-      logEvent, getRecentEvents, computeStudentSRL, events, subjects, processedMetrics
+      logEvent, getRecentEvents, computeStudentSRL, getBehaviorClusters, events, subjects, processedMetrics
     }}>
       {children}
     </MockBackendContext.Provider>

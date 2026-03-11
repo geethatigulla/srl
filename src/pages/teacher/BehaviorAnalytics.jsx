@@ -4,19 +4,20 @@ import { AlertTriangle, TrendingDown, Target, Zap } from 'lucide-react';
 import { useMockBackend } from '../../context/MockBackendContext';
 import { useState, useEffect } from 'react';
 
-const behaviorData = [
-  { name: 'Consistent Learners', value: 45, color: 'var(--success)' },
-  { name: 'High Performers', value: 15, color: 'var(--accent)' },
-  { name: 'Passive Learners', value: 20, color: '#f59e0b' },
-  { name: 'Procrastinators', value: 15, color: '#f97316' },
-  { name: 'At Risk', value: 5, color: 'var(--danger)' }
-];
-
 export default function BehaviorAnalytics() {
-  const { users, computeStudentSRL } = useMockBackend();
+  const { users, computeStudentSRL, getBehaviorClusters } = useMockBackend();
   const [classSRL, setClassSRL] = useState({ planning: 0, monitoring: 0, control: 0, reflection: 0 });
+  const [behaviorData, setBehaviorData] = useState([]);
+  
+  const COLORS = ['var(--success)', 'var(--accent)', 'var(--danger)', '#f59e0b', '#f97316'];
 
   useEffect(() => {
+    const clusters = getBehaviorClusters().map((c, i) => ({
+       ...c,
+       color: COLORS[i % COLORS.length]
+    }));
+    setBehaviorData(clusters);
+    
     const students = users.filter(u => u.role === 'student');
     if (students.length === 0) return;
 
@@ -141,6 +142,30 @@ export default function BehaviorAnalytics() {
          </div>
       </div>
 
+      <div className="card mb-8">
+         <h3 className="mb-6">Dynamic Cluster Membership</h3>
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {behaviorData.map(cluster => (
+              <div key={cluster.name} className="p-4 rounded-lg border border-border bg-white">
+                 <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 rounded-full" style={{ background: cluster.color }} />
+                    <span className="font-bold text-sm tracking-tight">{cluster.name}</span>
+                 </div>
+                 <div className="flex flex-col gap-2">
+                    {cluster.members && cluster.members.length > 0 ? (
+                      cluster.members.map(member => (
+                        <div key={member} className="text-xs text-muted flex items-center gap-2">
+                           <User size={12} /> {member}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-xs text-muted italic">No students identified</div>
+                    )}
+                 </div>
+              </div>
+            ))}
+         </div>
+      </div>
     </div>
   );
 }
