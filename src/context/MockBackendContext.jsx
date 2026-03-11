@@ -93,12 +93,26 @@ export const MockBackendProvider = ({ children }) => {
   const computeStudentSRL = (studentId) => {
     const studentEvents = events.filter(e => e.student_id === studentId);
     
-    // Simulated dimension calculations based on event heuristics
-    const planning = Math.min(100, 50 + studentEvents.filter(e => e.event_type === 'chapter_preview').length * 5);
-    const monitoring = Math.min(100, 40 + studentEvents.filter(e => e.event_type === 'quiz_retry').length * 10);
-    const control = Math.min(100, 60 + studentEvents.filter(e => e.event_type === 'video_rewind').length * 2);
-    const reflection = Math.min(100, 30 + studentEvents.filter(e => e.event_type === 'poll_answer').length * 15);
-    const motivation = Math.min(100, 70 + (studentEvents.length > 50 ? 20 : 0)); // Based on sheer volume of activity
+    // Planning: Looking ahead and organizing
+    const planningEvents = studentEvents.filter(e => ['chapter_preview', 'assignment_view'].includes(e.event_type)).length;
+    const planning = Math.min(100, 30 + (planningEvents * 10));
+
+    // Monitoring: Tracking own understanding
+    const quizEvents = studentEvents.filter(e => e.event_type === 'quiz_submit').length;
+    const pollEvents = studentEvents.filter(e => e.event_type === 'poll_answer').length;
+    const monitoring = Math.min(100, 40 + (quizEvents * 15) + (pollEvents * 10));
+
+    // Control: Strategic adjustments (Rewinding, Pausing, Handling confusion)
+    const rewindEvents = studentEvents.filter(e => e.event_type === 'video_rewind').length;
+    const confusionSpots = studentEvents.filter(e => e.event_type === 'confusion_spot').length;
+    const control = Math.min(100, 50 + (rewindEvents * 5) - (confusionSpots * 10)); // Confusion penalizes control if not resolved
+
+    // Reflection: Summarizing and reacting to learning
+    const completionEvents = studentEvents.filter(e => e.event_type === 'video_complete' || e.event_type === 'assignment_submit').length;
+    const reflection = Math.min(100, 20 + (completionEvents * 20) + (pollEvents * 5));
+
+    // Motivation: Overall engagement volume and velocity
+    const motivation = Math.min(100, 50 + (studentEvents.length / 5));
 
     return { planning, monitoring, control, reflection, motivation };
   };
