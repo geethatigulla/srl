@@ -1,3 +1,4 @@
+import { ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, AreaChart, Area, XAxis, CartesianGrid, Tooltip } from 'recharts';
 import { Target, Clock, CheckCircle, BarChart2, Star, ShieldAlert, ExternalLink, FileText, PlayCircle, HelpCircle } from 'lucide-react';
 import { useMockBackend } from '../../context/MockBackendContext';
 
@@ -87,6 +88,34 @@ export default function StudentDashboard() {
           <div className="metric-trend text-muted text-sm mt-2">Class: AI-ML-B-2026</div>
         </div>
       </div>
+
+      {/* Phase 9: Adaptive Support Board */}
+      {studentInterventions && studentInterventions.length > 0 && (
+        <div className="card mb-8 border-l-4 border-accent shadow-md bg-accent/5">
+           <h3 className="flex items-center gap-2 mb-4 text-accent m-0">
+             <ShieldAlert size={20} /> Adaptive Learning Support
+           </h3>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              {studentInterventions.map(item => (
+                <div key={item.id} className="p-4 rounded-xl bg-white border border-accent/20 flex items-start gap-4 hover:shadow-lg transition-shadow">
+                   <div className="p-3 rounded-full bg-accent/10">
+                      {getMaterialIcon(item.material_type)}
+                   </div>
+                   <div className="flex-1">
+                      <div className="flex justify-between items-center mb-1">
+                         <span className="font-bold text-sm tracking-tight capitalize">{item.material_type} - Teacher Recommended</span>
+                         <span className="text-[10px] text-muted">{new Date(item.timestamp).toLocaleDateString()}</span>
+                      </div>
+                      <p className="text-xs text-muted leading-relaxed mb-3">{item.description}</p>
+                      <button className="btn btn-primary btn-sm py-1.5 px-4 text-[10px] tracking-wider rounded-lg flex items-center gap-2">
+                        Get Support <ExternalLink size={12} />
+                      </button>
+                   </div>
+                </div>
+              ))}
+           </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="card">

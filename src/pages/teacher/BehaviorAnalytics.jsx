@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { AlertTriangle, TrendingDown, Target, Zap } from 'lucide-react';
+import { AlertTriangle, TrendingDown, Target, Zap, Activity, User } from 'lucide-react';
 import { useMockBackend } from '../../context/MockBackendContext';
 import { useState, useEffect } from 'react';
 
