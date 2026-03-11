@@ -14,6 +14,9 @@ export default function VideoPlayer() {
   const [quizAnswered, setQuizAnswered] = useState(false);
   const [pollAnswered, setPollAnswered] = useState(false);
   const [duration, setDuration] = useState(0);
+  const [pauseCount, setPauseCount] = useState(0);
+  const [watchHeatmap, setWatchHeatmap] = useState({}); // Tracking 10s segments
+  const [confusionSpots, setConfusionSpots] = useState(new Set());
   
   const { track } = useTelemetry();
   const { subjects } = useMockBackend();
@@ -40,6 +43,15 @@ export default function VideoPlayer() {
       video.pause();
     }
   }, [isPlaying]);
+
+  // Phase 5: Dropout Tracking on Unmount
+  useEffect(() => {
+    return () => {
+      if (progress < 95 && progress > 5) {
+        track('video_dropout', { ...metadataBase, dropout_timestamp: `${progress.toFixed(1)}%` });
+      }
+    };
+  }, [progress, track, metadataBase]);
 
   const handleTimeUpdate = () => {
     if (!videoRef.current || duration === 0) return;
@@ -282,6 +294,11 @@ export default function VideoPlayer() {
             </div>
             
             <div className="flex items-center gap-4">
+               {confusionSpots.size > 0 && (
+                 <span className="text-xs font-bold bg-danger/20 text-danger px-2 py-1 rounded animate-pulse border border-danger/30">
+                   Confusion Detected
+                 </span>
+               )}
                <span className="text-xs font-mono bg-black/60 px-2 py-1 rounded backdrop-blur border border-white/10 hidden md:block text-accent">
                  Telemetry Active
                </span>
