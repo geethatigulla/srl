@@ -74,6 +74,19 @@ export default function VideoPlayer() {
     
     setProgress(currentProgress);
     setMaxWatched(Math.max(currentProgress, maxWatched));
+
+    // Phase 5: Rewatch Heatmap & Confusion Detection
+    const segment = Math.floor(videoRef.current.currentTime / 10);
+    setWatchHeatmap(prev => {
+       const count = (prev[segment] || 0) + 1;
+       
+       if (count > 50 && !confusionSpots.has(segment)) { 
+          setConfusionSpots(prevSet => new Set(prevSet).add(segment));
+          track('confusion_spot', { ...metadataBase, segment_id: segment, segment_start: segment * 10 });
+       }
+       
+       return { ...prev, [segment]: count };
+    });
   };
 
   const handleLoadedMetadata = () => {
@@ -99,7 +112,8 @@ export default function VideoPlayer() {
     if (!isPlaying) {
       track('video_play', { ...metadataBase, video_timestamp: `${progress.toFixed(1)}%` });
     } else {
-      track('video_pause', { ...metadataBase, video_timestamp: `${progress.toFixed(1)}%` });
+      setPauseCount(prev => prev + 1);
+      track('video_pause', { ...metadataBase, video_timestamp: `${progress.toFixed(1)}%`, total_pauses: pauseCount + 1 });
     }
   };
 
